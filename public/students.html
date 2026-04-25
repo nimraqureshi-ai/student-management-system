@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Students — Student Management System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>Students</h2>
+      <p>Manage all enrolled students</p>
+    </div>
+    <div class="topbar-right">
+      <span class="date-badge" id="liveDate"></span>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Add Student</button>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="card">
+      <div class="card-header">
+        <h3>All Students <span id="studentCount" style="font-size:13px;font-weight:400;color:#8a97a8;font-family:'DM Sans',sans-serif;"></span></h3>
+        <div class="search-bar">
+          <div class="search-input">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search by name, roll no…" oninput="filterStudents()">
+          </div>
+          <select class="filter-select" id="deptFilter" onchange="filterStudents()">
+            <option value="">All Departments</option>
+            <option>Computer Science</option>
+            <option>Software Engineering</option>
+            <option>Information Technology</option>
+          </select>
+          <select class="filter-select" id="statusFilter" onchange="filterStudents()">
+            <option value="">All Status</option>
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Roll No</th>
+              <th>Department</th>
+              <th>Sem</th>
+              <th>Email</th>
+              <th>CGPA</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTable">
+            <tr><td colspan="9" style="text-align:center;padding:30px;color:#8a97a8;">Loading students…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Student Modal ── -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Student</h3>
+      <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="add-name" placeholder="e.g. Ahmed Khan">
+        </div>
+        <div class="form-group">
+          <label>Roll Number *</label>
+          <input type="text" id="add-rollNo" placeholder="e.g. CS-2024-001">
+        </div>
+        <div class="form-group">
+          <label>Department *</label>
+          <select id="add-department">
+            <option value="">Select Department</option>
+            <option>Computer Science</option>
+            <option>Software Engineering</option>
+            <option>Information Technology</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Semester</label>
+          <select id="add-semester">
+            <option value="1">1st</option>
+            <option value="2">2nd</option>
+            <option value="3">3rd</option>
+            <option value="4">4th</option>
+            <option value="5">5th</option>
+            <option value="6">6th</option>
+            <option value="7">7th</option>
+            <option value="8">8th</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" id="add-email" placeholder="student@email.com">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" id="add-phone" placeholder="0300-0000000">
+        </div>
+        <div class="form-group">
+          <label>CGPA</label>
+          <input type="number" id="add-cgpa" placeholder="0.00" min="0" max="4" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="add-status">
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Enrolled Date</label>
+          <input type="date" id="add-enrolledDate">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" onclick="closeModal('addModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit Student Modal ── -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit Student</h3>
+      <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="edit-name">
+        </div>
+        <div class="form-group">
+          <label>Roll Number</label>
+          <input type="text" id="edit-rollNo">
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <select id="edit-department">
+            <option>Computer Science</option>
+            <option>Software Engineering</option>
+            <option>Information Technology</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Semester</label>
+          <select id="edit-semester">
+            <option value="1">1st</option><option value="2">2nd</option>
+            <option value="3">3rd</option><option value="4">4th</option>
+            <option value="5">5th</option><option value="6">6th</option>
+            <option value="7">7th</option><option value="8">8th</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="edit-email">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" id="edit-phone">
+        </div>
+        <div class="form-group">
+          <label>CGPA</label>
+          <input type="number" id="edit-cgpa" min="0" max="4" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="edit-status">
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="/js/shared.js"></script>
+<script>
+  document.getElementById('sidebar').innerHTML = renderSidebar();
+
+  let allStudents = [];
+
+  async function loadStudents() {
+    const res = await apiGet('/api/students');
+    allStudents = res.data;
+    renderTable(allStudents);
+  }
+
+  function renderTable(students) {
+    const tbody = document.getElementById('studentsTable');
+    document.getElementById('studentCount').textContent = `(${students.length})`;
+
+    if (!students.length) {
+      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">👨‍🎓</div><h4>No students found</h4><p>Try adjusting your search filters</p></div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = students.map((s, i) => `
+      <tr>
+        <td style="color:#8a97a8;font-size:12.5px;">${i + 1}</td>
+        <td><strong>${s.name}</strong></td>
+        <td style="font-size:12.5px;color:#8a97a8;">${s.rollNo}</td>
+        <td style="font-size:13px;">${s.department}</td>
+        <td style="text-align:center;">${s.semester}</td>
+        <td style="font-size:12.5px;color:#4a5568;">${s.email}</td>
+        <td>
+          <div class="cgpa-bar" style="min-width:80px;">
+            <div class="cgpa-track"><div class="cgpa-fill" style="width:${(s.cgpa/4)*100}%"></div></div>
+            <span class="cgpa-val">${s.cgpa}</span>
+          </div>
+        </td>
+        <td><span class="badge badge-${s.status.toLowerCase()}">${s.status}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-outline btn-sm" onclick="openEdit('${s.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}', '${s.name}')">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function filterStudents() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const dept = document.getElementById('deptFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const filtered = allStudents.filter(s => {
+      const matchSearch = !q || s.name.toLowerCase().includes(q) || s.rollNo.toLowerCase().includes(q) || s.email.toLowerCase().includes(q);
+      const matchDept = !dept || s.department === dept;
+      const matchStatus = !status || s.status === status;
+      return matchSearch && matchDept && matchStatus;
+    });
+    renderTable(filtered);
+  }
+
+  function openAddModal() {
+    document.getElementById('add-enrolledDate').value = new Date().toISOString().split('T')[0];
+    openModal('addModal');
+  }
+
+  async function addStudent() {
+    const data = {
+      name: document.getElementById('add-name').value.trim(),
+      rollNo: document.getElementById('add-rollNo').value.trim(),
+      department: document.getElementById('add-department').value,
+      semester: document.getElementById('add-semester').value,
+      email: document.getElementById('add-email').value.trim(),
+      phone: document.getElementById('add-phone').value.trim(),
+      cgpa: document.getElementById('add-cgpa').value,
+      status: document.getElementById('add-status').value,
+      enrolledDate: document.getElementById('add-enrolledDate').value,
+    };
+
+    if (!data.name || !data.rollNo || !data.department || !data.email) {
+      showToast('Please fill in all required fields', 'error'); return;
+    }
+
+    const res = await apiPost('/api/students', data);
+    if (res.success) {
+      showToast('Student added successfully!', 'success');
+      closeModal('addModal');
+      loadStudents();
+      // Reset form
+      ['add-name','add-rollNo','add-email','add-phone','add-cgpa'].forEach(id => document.getElementById(id).value = '');
+    } else {
+      showToast(res.message || 'Failed to add student', 'error');
+    }
+  }
+
+  function openEdit(id) {
+    const s = allStudents.find(s => s.id === id);
+    if (!s) return;
+    document.getElementById('edit-id').value = s.id;
+    document.getElementById('edit-name').value = s.name;
+    document.getElementById('edit-rollNo').value = s.rollNo;
+    document.getElementById('edit-department').value = s.department;
+    document.getElementById('edit-semester').value = s.semester;
+    document.getElementById('edit-email').value = s.email;
+    document.getElementById('edit-phone').value = s.phone;
+    document.getElementById('edit-cgpa').value = s.cgpa;
+    document.getElementById('edit-status').value = s.status;
+    openModal('editModal');
+  }
+
+  async function saveEdit() {
+    const id = document.getElementById('edit-id').value;
+    const data = {
+      name: document.getElementById('edit-name').value.trim(),
+      rollNo: document.getElementById('edit-rollNo').value.trim(),
+      department: document.getElementById('edit-department').value,
+      semester: document.getElementById('edit-semester').value,
+      email: document.getElementById('edit-email').value.trim(),
+      phone: document.getElementById('edit-phone').value.trim(),
+      cgpa: document.getElementById('edit-cgpa').value,
+      status: document.getElementById('edit-status').value,
+    };
+    const res = await apiPut(`/api/students/${id}`, data);
+    if (res.success) {
+      showToast('Student updated!', 'success');
+      closeModal('editModal');
+      loadStudents();
+    } else {
+      showToast(res.message || 'Update failed', 'error');
+    }
+  }
+
+  async function deleteStudent(id, name) {
+    if (!confirm(`Delete student "${name}"? This cannot be undone.`)) return;
+    const res = await apiDelete(`/api/students/${id}`);
+    if (res.success) {
+      showToast(`${name} removed`, 'success');
+      loadStudents();
+    } else {
+      showToast('Delete failed', 'error');
+    }
+  }
+
+  loadStudents();
+</script>
+</body>
+</html>

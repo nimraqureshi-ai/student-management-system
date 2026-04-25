@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Student Management System</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar"></aside>
+
+<!-- Main -->
+<div class="main-content">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>Dashboard</h2>
+      <p>University Institute of Information Technology · PMAS-AAUR</p>
+    </div>
+    <div class="topbar-right">
+      <span class="date-badge" id="liveDate"></span>
+    </div>
+  </div>
+
+  <div class="page-body">
+
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-icon navy">👨‍🎓</div>
+        <div class="stat-data"><div class="stat-value" id="s-total">—</div><div class="stat-label">Total Students</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon success">✅</div>
+        <div class="stat-data"><div class="stat-value" id="s-active">—</div><div class="stat-label">Active Students</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon gold">📚</div>
+        <div class="stat-data"><div class="stat-value" id="s-courses">—</div><div class="stat-label">Total Courses</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon info">⭐</div>
+        <div class="stat-data"><div class="stat-value" id="s-cgpa">—</div><div class="stat-label">Average CGPA</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon warning">🏛️</div>
+        <div class="stat-data"><div class="stat-value" id="s-depts">—</div><div class="stat-label">Departments</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon danger">📢</div>
+        <div class="stat-data"><div class="stat-value" id="s-anns">—</div><div class="stat-label">Announcements</div></div>
+      </div>
+    </div>
+
+    <!-- Bottom Grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap;">
+
+      <!-- Recent Students -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Recent Students</h3>
+          <a href="/students" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Roll No</th><th>CGPA</th><th>Status</th></tr></thead>
+            <tbody id="recentStudentsTable"><tr><td colspan="4" style="text-align:center;padding:20px;color:#8a97a8;">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Announcements -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Latest Announcements</h3>
+          <a href="/announcements" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        <div class="card-body" id="dashAnnouncements" style="display:flex;flex-direction:column;gap:14px;">
+          <p style="color:#8a97a8;font-size:13.5px;">Loading…</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header"><h3>Quick Actions</h3></div>
+      <div class="card-body" style="display:flex;gap:14px;flex-wrap:wrap;">
+        <a href="/students" class="btn btn-primary">👨‍🎓 Manage Students</a>
+        <a href="/courses" class="btn btn-gold">📚 Manage Courses</a>
+        <a href="/announcements" class="btn btn-outline">📢 Post Announcement</a>
+        <a href="/api/students" target="_blank" class="btn btn-outline">🔌 View API</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="/js/shared.js"></script>
+<script>
+  document.getElementById('sidebar').innerHTML = renderSidebar();
+
+  async function loadDashboard() {
+    const [statsRes, studRes, annRes] = await Promise.all([
+      apiGet('/api/stats'),
+      apiGet('/api/students'),
+      apiGet('/api/announcements')
+    ]);
+
+    const s = statsRes.data;
+    document.getElementById('s-total').textContent = s.totalStudents;
+    document.getElementById('s-active').textContent = s.activeStudents;
+    document.getElementById('s-courses').textContent = s.totalCourses;
+    document.getElementById('s-cgpa').textContent = s.avgCgpa;
+    document.getElementById('s-depts').textContent = s.departments;
+    document.getElementById('s-anns').textContent = s.announcements;
+
+    // Recent students (last 4)
+    const students = studRes.data.slice(0, 4);
+    const tbody = document.getElementById('recentStudentsTable');
+    tbody.innerHTML = students.map(s => `
+      <tr>
+        <td><strong>${s.name}</strong></td>
+        <td style="font-size:12.5px;color:#8a97a8;">${s.rollNo}</td>
+        <td>
+          <div class="cgpa-bar" style="min-width:100px;">
+            <div class="cgpa-track"><div class="cgpa-fill" style="width:${(s.cgpa/4)*100}%"></div></div>
+            <span class="cgpa-val">${s.cgpa}</span>
+          </div>
+        </td>
+        <td><span class="badge badge-${s.status.toLowerCase()}">${s.status}</span></td>
+      </tr>
+    `).join('');
+
+    // Announcements (top 3)
+    const anns = annRes.data.slice(0, 3);
+    const annEl = document.getElementById('dashAnnouncements');
+    annEl.innerHTML = anns.map(a => `
+      <div class="ann-card">
+        <div class="ann-card-header">
+          <h4>${a.title}</h4>
+          <span class="badge badge-${a.priority.toLowerCase()}">${a.priority}</span>
+        </div>
+        <div class="ann-card-body">${a.content.substring(0, 100)}…</div>
+        <div class="ann-card-footer"><span>📅 ${a.date}</span><span>— ${a.author}</span></div>
+      </div>
+    `).join('');
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>
